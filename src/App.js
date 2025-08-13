@@ -17,6 +17,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import StripePaymentForm from './StripePaymentForm';
 import ChatBot from "./ChatBot";
 import SpeechBubbleIcon from "./SpeechBubbleIcon";
+import AdminPanel from "./AdminPanel";
 
 const STRIPE_PUBLISHABLE_KEY = 'pk_test_51RpsvRGCzl4sutfYlZ8ibkfpuZp6JFqrwMBFhPFvqgpW6AdYcIfaDbvq1U14AP1bdlMuqb4eH15jdmMTPX4MoEs900G1JeVb1q'; // Real Stripe publishable key
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
@@ -551,6 +552,7 @@ const handleChat = async (input) => {
 
   const getWeekStatus = (weekNumber) => {
     if (!userData) return 'locked';
+    if (userData.unlocked) return 'unlocked';
     const block = getBlockForWeek(weekNumber);
     if (block === 2 && !paymentStatus.block2) return 'payment_locked';
     if (block === 3 && !paymentStatus.block3) return 'payment_locked';
@@ -562,6 +564,7 @@ const handleChat = async (input) => {
 
   const getDayStatus = (weekNumber, dayIndex) => {
     if (!userData) return 'locked';
+    if (userData.unlocked) return 'unlocked';
     const { week: currentWeek, day: currentDay } = userData.progress;
     if (weekNumber < currentWeek) return 'completed';
     if (weekNumber > currentWeek) return 'locked';
@@ -769,6 +772,8 @@ const handleChat = async (input) => {
               return <RemindersView reminders={reminders} onUpdate={handleRemindersUpdate} />;
           case 'coach':
               return <ChatBot />;
+          case 'admin':
+              return <AdminPanel db={db} appId={appId} />;
           default:
               return <LoadingScreen />;
       }
