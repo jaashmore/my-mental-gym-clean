@@ -792,6 +792,10 @@ const handleChat = async (input) => {
                     activeView={view} 
                     setView={setView} 
                 />
+                {/* Debug: Show current user email at bottom right */}
+                <div className="fixed bottom-2 right-2 bg-gray-800 text-white px-3 py-1 rounded z-50 text-xs opacity-80">
+                  {user.email ? `Logged in as: ${user.email}` : 'No email'}
+                </div>
                 {user && user.email === "jeff@mymentalgym.com" && (
                   <button
                     className="fixed bottom-8 right-8 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow-lg z-50"
