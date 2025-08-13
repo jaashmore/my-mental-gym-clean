@@ -1,0 +1,12 @@
+[
+  {
+    "intent": "mental_strength",
+    "keywords": ["mental", "strength", "resilience", "toughness"],
+    "response": "Mental strength means remaining calm and centered regardless of what happens around you. Practice awareness, presence, and regular resets."
+  },
+  {
+    "intent": "focus_improvement",
+    "keywords": ["focus", "attention", "distractions"],
+    "response": "To improve focus, begin each day by setting a clear intention. Reduce distractions, and anchor your attention with breath or simple visual cues."
+  }
+]
