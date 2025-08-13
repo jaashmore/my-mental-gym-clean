@@ -792,7 +792,7 @@ const handleChat = async (input) => {
                     activeView={view} 
                     setView={setView} 
                 />
-                {user && user.email === "jaashmore@gmail.com" && (
+                {user && user.email === "jeff@mymentalgym.com" && (
                   <button
                     className="fixed bottom-8 right-8 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow-lg z-50"
                     onClick={() => setView('admin')}
