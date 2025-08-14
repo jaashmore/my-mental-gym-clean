@@ -52,7 +52,7 @@ const askCoach = async (question, userId = "anon") => {
 const courseData = {
 
     1: {
-        title: "The Mind as the Starting Block",
+        title: "The Mind as the Starting Blck",
         weeklyIntro: "Welcome to Week 1. Before we can learn to direct our thoughts, we must first learn to simply observe them without judgment. Many athletes are controlled by their thoughts—a flash of doubt before a big play, a surge of anger after a mistake. They believe they are their thoughts. The goal this week is to break that illusion. This week's drills are designed to build the foundational skill of awareness. By practicing stillness and non-reaction, you will start to create a small space between a thought and your response to it. This space is where all mental power resides. It's the difference between an impulsive, emotional reaction and a calm, calculated action. This is the most fundamental skill in all of mental training.",
         days: [
             { title: "Day 1: The Stillness Drill", instructions: "For 5 minutes, sit upright and remain physically still. Your only job is to notice thoughts without reacting. When your mind wanders, gently guide it back to stillness.", deeperDive: "This drill trains your prefrontal cortex to resist impulsive reactions, a key skill for staying calm under pressure. You're creating a 'mental pause button' that prevents you from being rattled by a bad call or a mistake, allowing you to respond with logic instead of impulse.", journalPrompt: "Describe the 'chatter' in your mind. What kinds of thoughts kept popping up?" },
