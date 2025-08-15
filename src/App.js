@@ -52,7 +52,7 @@ const askCoach = async (question, userId = "anon") => {
 const courseData = {
 
     1: {
-        title: "The Mind as the Starting Blck",
+        title: "The Mind as the Starting Block",
         weeklyIntro: "Welcome to Week 1. Before we can learn to direct our thoughts, we must first learn to simply observe them without judgment. Many athletes are controlled by their thoughts—a flash of doubt before a big play, a surge of anger after a mistake. They believe they are their thoughts. The goal this week is to break that illusion. This week's drills are designed to build the foundational skill of awareness. By practicing stillness and non-reaction, you will start to create a small space between a thought and your response to it. This space is where all mental power resides. It's the difference between an impulsive, emotional reaction and a calm, calculated action. This is the most fundamental skill in all of mental training.",
         days: [
             { title: "Day 1: The Stillness Drill", instructions: "For 5 minutes, sit upright and remain physically still. Your only job is to notice thoughts without reacting. When your mind wanders, gently guide it back to stillness.", deeperDive: "This drill trains your prefrontal cortex to resist impulsive reactions, a key skill for staying calm under pressure. You're creating a 'mental pause button' that prevents you from being rattled by a bad call or a mistake, allowing you to respond with logic instead of impulse.", journalPrompt: "Describe the 'chatter' in your mind. What kinds of thoughts kept popping up?" },
@@ -483,15 +483,20 @@ const handleChat = async (input) => {
               }
               setReminders(data.reminders || []);
               const lastCompletionTimestamp = data.lastCompletionTimestamp || null;
-              let isAvailable = true;
-              if (lastCompletionTimestamp) {
-                  const lastCompletionDate = new Date(lastCompletionTimestamp);
-                  const today = new Date();
-                  if (lastCompletionDate.toDateString() === today.toDateString()) {
-                      isAvailable = false;
+              // If user is unlocked, always allow all days (no wait restriction)
+              if (data.unlocked) {
+                  setIsNextDayAvailable(true);
+              } else {
+                  let isAvailable = true;
+                  if (lastCompletionTimestamp) {
+                      const lastCompletionDate = new Date(lastCompletionTimestamp);
+                      const today = new Date();
+                      if (lastCompletionDate.toDateString() === today.toDateString()) {
+                          isAvailable = false;
+                      }
                   }
+                  setIsNextDayAvailable(isAvailable);
               }
-              setIsNextDayAvailable(isAvailable);
               if (!data.hasSeenIntro) {
                   setView('introduction');
               } else {
@@ -550,6 +555,7 @@ const handleChat = async (input) => {
     return 0;
   };
 
+  // Always unlock all weeks and days for unlocked users
   const getWeekStatus = (weekNumber) => {
     if (!userData) return 'locked';
     if (userData.unlocked) return 'unlocked';
@@ -581,6 +587,12 @@ const handleChat = async (input) => {
   };
 
   const startSession = (week, dayIndex) => {
+    // For unlocked users, allow access to any session, any time
+    if (userData && userData.unlocked) {
+      setCurrentSession({ week, day: dayIndex });
+      setView('session');
+      return;
+    }
     const status = getWeekStatus(week);
     if (status === 'payment_locked') {
       setShowPaymentModal(true);
@@ -730,6 +742,7 @@ const handleChat = async (input) => {
           case 'introduction':
               return <IntroductionPage onComplete={markIntroAsSeen} />;
           case 'dashboard':
+              // For unlocked users, always pass true for isNextDayAvailable
               return (
                   <Dashboard
                       courseData={courseData}
@@ -738,7 +751,7 @@ const handleChat = async (input) => {
                       startSession={startSession}
                       progress={userData?.progress}
                       handleWeekClick={handleWeekClick}
-                      isNextDayAvailable={isNextDayAvailable}
+                      isNextDayAvailable={userData && userData.unlocked ? true : isNextDayAvailable}
                       openChat={() => setView('chat')}
                   />
               );
@@ -753,18 +766,20 @@ const handleChat = async (input) => {
                       onBack={() => setView('dashboard')}
                       journalEntry={journalEntries[entryKey]}
                       onJournalChange={handleJournalChange}
+                      unlocked={userData && userData.unlocked}
                   />
               );
           }
           case 'journal':
               return <JournalView entries={journalEntries} courseData={courseData} />;
           case 'gamePlan':
+              // Always show unlocked game plan for unlocked users
               return (
                   <GamePlanView
                       planData={gamePlanDraft}
                       onPlanChange={handleGamePlanDraftChange}
                       onSave={handleGamePlanSave}
-                      paymentStatus={paymentStatus}
+                      paymentStatus={{ block2: true, block3: true, gamePlanUnlocked: true }}
                       onUnlockRequest={() => setShowPaymentModal(true)}
                   />
               );
@@ -792,10 +807,6 @@ const handleChat = async (input) => {
                     activeView={view} 
                     setView={setView} 
                 />
-                {/* Debug: Show current user email at bottom right */}
-                <div className="fixed bottom-2 right-2 bg-gray-800 text-white px-3 py-1 rounded z-50 text-xs opacity-80">
-                  {user.email ? `Logged in as: ${user.email}` : 'No email'}
-                </div>
                 {user && user.email === "jeff@mymentalgym.com" && (
                   <button
                     className="fixed bottom-8 right-8 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow-lg z-50"
@@ -1063,7 +1074,7 @@ const Dashboard = ({ courseData, getWeekStatus, getDayStatus, startSession, prog
                     <div id="dashboard-intro-section" className="text-gray-300 space-y-4 leading-relaxed max-w-3xl mx-auto animate-fade-in">
                         <p><strong className="text-yellow-400">Concept:</strong> Physical talent gets you to the game. Mental strength lets you win it.</p>
                         <p><strong className="text-yellow-400">Deeper Dive:</strong> You spend countless hours training your body: lifting, running, and practicing drills until they're perfect. But every top athlete knows that when the pressure is on, the real competition happens in the six inches between your ears. The difference between a good athlete and a great one often comes down to who has the stronger mental game. This course is designed to be your personal mental gym, a place to build the focus, confidence, and resilience that define elite competitors.</p>
-                        <p>Over the next 24 weeks, you will learn and practice the core principles of sports psychology, adapted from the timeless wisdom of the Master Key System. We will move from foundational skills like controlling your thoughts and focus, to advanced techniques like high-definition visualization and building unshakable belief in your abilities. Each week builds on the last, creating a comprehensive mental toolkit you can use for the rest of your athletic career.</p>
+                        <p>In this course you will learn and practice the core principles of sports psychology. We will move from foundational skills like controlling your thoughts and focus, to advanced techniques like high-definition visualization and building unshakable belief in your abilities. Each week builds on the last, creating a comprehensive mental toolkit you can use for the rest of your athletic career.</p>
                         <p>Your commitment to these daily exercises is just as important as your commitment to your physical training. The drills are short but powerful. The journaling is designed to create self-awareness, which is the cornerstone of all improvement. By investing a few minutes each day, you are not just learning concepts; you are actively re-wiring your brain for success.</p>
                         <p>This journey is about more than just becoming a better athlete; it's about becoming a more focused, resilient, and confident person. The skills you build here will serve you long after you've left the field or court. Welcome to the first day of your new mental training regimen. <span className="font-bold text-yellow-400">Let's begin.</span></p>
                     </div>
@@ -1180,7 +1191,7 @@ const WeekAccordion = ({ weekNum, weekData, status, getDayStatus, startSession, 
     );
 };
 
-const DailySession = ({ sessionData, sessionInfo, onComplete, onBack, journalEntry, onJournalChange }) => {
+const DailySession = ({ sessionData, sessionInfo, onComplete, onBack, journalEntry, onJournalChange, unlocked }) => {
   const [localText, setLocalText] = useState(journalEntry?.text || '');
   const topRef = React.useRef(null);
   useEffect(() => {
@@ -1230,7 +1241,7 @@ const DailySession = ({ sessionData, sessionInfo, onComplete, onBack, journalEnt
             <div className="mt-8 text-center">
                 <button 
                     onClick={onComplete}
-                    disabled={!localText.trim()}
+                    disabled={unlocked ? false : !localText.trim()}
                     className="bg-green-500 text-white font-bold py-3 px-10 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg disabled:bg-gray-600 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                     Complete Session
