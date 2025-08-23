@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 
 
-const COACH_API = process.env.REACT_APP_COACH_API || "http://localhost:8787";
+const COACH_API = process.env.REACT_APP_COACH_API || "http://192.168.56.1:8787";
 const BACKEND_URL = `${COACH_API}/api/coach`;
 
 export default function ChatBot() {
