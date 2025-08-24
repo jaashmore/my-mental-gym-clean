@@ -1,6 +1,8 @@
 // src/ChatBot.jsx
 
 import React, { useState, useEffect, useRef } from "react";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { getApp } from "firebase/app";
 
 
 const COACH_API = process.env.REACT_APP_COACH_API || "http://192.168.56.1:8787";
@@ -15,38 +17,30 @@ export default function ChatBot() {
   // Unique key for this user's chat history
 const CHAT_KEY = "chatHistory_demo-user"; // Replace demo-user with a real userId if available
 
-// Load chat history from localStorage on mount
+const db = getFirestore(getApp());
+const chatCollection = collection(db, "chats"); // You can use a subcollection per user if desired
+
+// Load chat messages in real time
 useEffect(() => {
-  try {
-    const saved = localStorage.getItem(CHAT_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setMessages(parsed.map(m => ({
-        ...m,
-        date: m.date ? new Date(m.date) : new Date()
-      })));
-    }
-  } catch (e) {}
+  const q = query(chatCollection, orderBy("timestamp"));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    setMessages(
+      snapshot.docs.map(doc => ({
+        ...doc.data(),
+        date: doc.data().timestamp?.toDate?.() || new Date()
+      }))
+    );
+  });
+  return () => unsubscribe();
 }, []);
 
-// Save chat history to localStorage whenever messages change
-useEffect(() => {
-  if (messages.length > 0) {
-    try {
-      localStorage.setItem(CHAT_KEY, JSON.stringify(messages));
-    } catch (e) {}
-  }
-}, [messages]);
-
-  const push = (msg) =>
-    setMessages((prev) => [
-      ...prev,
-      {
-        position: msg.position || "left",
-        text: String(msg.text ?? "").trim(),
-        date: msg.date || new Date(),
-      },
-    ]);
+  const push = async (msg) => {
+  await addDoc(chatCollection, {
+    position: msg.position || "left",
+    text: String(msg.text ?? "").trim(),
+    timestamp: serverTimestamp()
+  });
+};
 
     useEffect(() => {
   if (bottomRef.current) {
@@ -133,4 +127,3 @@ useEffect(() => {
     </div>
   );
 }
-
