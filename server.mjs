@@ -147,18 +147,8 @@ app.post("/api/coach", async (req, res) => {
     // 1. Embed the query
     const queryEmbedding = await getEmbedding(query);
 
-    // 2. Week-based filtering
-    let candidateChunks = EMBEDDINGS;
-    const weekMatch = query.match(/week\s*(\d{1,2})/i);
-    if (weekMatch) {
-      const weekStr = `Week ${parseInt(weekMatch[1], 10)}:`;
-      candidateChunks = EMBEDDINGS.filter(chunk => chunk.text && chunk.text.includes(weekStr));
-      // If no chunks found for that week, fall back to all
-      if (candidateChunks.length === 0) candidateChunks = EMBEDDINGS;
-    }
-
-    // 3. Find top 3 most similar KB chunks
-    const scored = candidateChunks.map(chunk => ({
+    // 2. Find top 3 most similar KB chunks
+    const scored = EMBEDDINGS.map(chunk => ({
       ...chunk,
       score: cosineSimilarity(queryEmbedding, chunk.embedding)
     }));
@@ -171,7 +161,7 @@ app.post("/api/coach", async (req, res) => {
     console.log("[COACH DEBUG] Top context chunks:", topChunks.map(c => ({ text: c.text, score: c.score })));
     console.log("[COACH DEBUG] Context sent to OpenAI:\n", context);
 
-    // 4. Call OpenAI with context and question
+    // 3. Call OpenAI with context and question
     const answer = await getOpenAIAnswer(context, query);
 
     // Log OpenAI answer

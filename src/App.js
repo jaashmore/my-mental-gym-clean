@@ -15,32 +15,11 @@ import { ArrowLeft, BookOpen, Shield, Home, Lock, Zap, ChevronDown, CheckCircle,
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import StripePaymentForm from './StripePaymentForm';
-import ChatBot from "./ChatBot";
 import SpeechBubbleIcon from "./SpeechBubbleIcon";
 import AdminPanel from "./AdminPanel";
 
 const STRIPE_PUBLISHABLE_KEY = 'pk_test_51RpsvRGCzl4sutfYlZ8ibkfpuZp6JFqrwMBFhPFvqgpW6AdYcIfaDbvq1U14AP1bdlMuqb4eH15jdmMTPX4MoEs900G1JeVb1q'; // Real Stripe publishable key
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
-
-
-// Coach API base URL — local server for now
-const COACH_API =
-  process.env.REACT_APP_COACH_API || "http://localhost:8787";
-
-/** Send a user message to your Coach backend and return the AI's reply */
-const askCoach = async (question, userId = "anon") => {
-  const res = await fetch(`${COACH_API}/coach`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, userId }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Coach server error ${res.status}: ${text}`);
-  }
-  const data = await res.json();
-  return (data.answer || "").trim();
-};
 
 
 
@@ -410,19 +389,6 @@ export default function App() {
   const [showReminderAlert, setShowReminderAlert] = useState(false);
   const [triggeredReminders, setTriggeredReminders] = useState([]);
 
-  // --- Chat Handler ---
-const handleChat = async (input) => {
-  try {
-    const uid = (auth && auth.currentUser && auth.currentUser.uid) || "anon";
-    const reply = await askCoach(input, uid);
-    return reply || "I couldn’t find a great match in the knowledge base, try rephrasing?";
-  } catch (err) {
-    console.error(err);
-    return "I’m having trouble reaching the Coach server. Is it still running on http://localhost:8787?";
-  }
-};
-
-
 
   // --- Firebase state
   const [auth, setAuth] = useState(null);
@@ -728,16 +694,7 @@ const handleChat = async (input) => {
           if (view === 'signup') return <SignupPage auth={auth} setView={setView} />;
           return <LoginPage auth={auth} setView={setView} />;
       }
-      if (view === 'chat') {
-          return (
-              <div>
-                  <button onClick={() => setView('dashboard')} className="p-2 bg-blue-500 text-white mb-4">
-                      Back to Dashboard
-                  </button>
-                  <ChatBot onSend={handleChat} />
-              </div>
-          );
-      }
+    
       switch (view) {
           case 'introduction':
               return <IntroductionPage onComplete={markIntroAsSeen} />;
@@ -785,8 +742,6 @@ const handleChat = async (input) => {
               );
           case 'reminders':
               return <RemindersView reminders={reminders} onUpdate={handleRemindersUpdate} />;
-          case 'coach':
-              return <ChatBot />;
           case 'admin':
               return <AdminPanel db={db} appId={appId} />;
           default:
@@ -950,7 +905,7 @@ const IntroductionPage = ({ onComplete }) => (
         <div className="w-full max-w-2xl bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700">
             <h1 className="text-3xl font-bold text-white text-center mb-4">Welcome to Your Mental Gym</h1>
             <div className="text-gray-300 space-y-4 leading-relaxed max-h-[60vh] overflow-y-auto pr-2">
-                <p><strong className="text-yellow-400">Concept:</strong> Physical talent gets you to the game. Mental strength lets you win it.</p>
+                <p><strong className="text-yellow-400">Concept:</strong> Physical talent gets you to the game. Mental strength lets you win.</p>
                 <p><strong className="text-yellow-400">Deeper Dive:</strong> You spend countless hours training your body: lifting, running, and practicing drills until they're perfect. But every top athlete knows that when the pressure is on, the real competition happens in the six inches between your ears. The difference between a good athlete and a great one often comes down to who has the stronger mental game. This course is designed to be your personal mental gym, a place to build the focus, confidence, and resilience that define elite competitors.</p>
                 <p>Over the next 24 weeks, you will learn and practice the core principles of sports psychology. Each week builds on the last, creating a comprehensive mental toolkit you can use for the rest of your athletic career.</p>
                 <p>Your commitment to these daily exercises is just as important as your commitment to your physical training. The drills are short but powerful. The journaling is designed to create self-awareness, which is the cornerstone of all improvement. By investing a few minutes each day, you are not just learning concepts; you are actively re-wiring your brain for success.</p>
@@ -1007,19 +962,6 @@ const NavBar = ({ activeView, setView }) => (
         <Bell className="w-6 h-6 mb-1" />
         <span className="text-xs font-medium">Reminders</span>
       </button>
-
-      {/* 🏋️‍♂️ Coach Button */}
-      <button
-        onClick={() => setView('coach')}
-        className={`flex flex-col items-center p-2 rounded-lg transition-colors duration-200 ${
-          activeView === 'coach'
-            ? 'text-yellow-400'
-            : 'text-gray-400 hover:bg-gray-700'
-        }`}
-      >
-        <span className="w-6 h-6 mb-1"><SpeechBubbleIcon className="w-6 h-6" /></span>
-        <span className="text-xs font-medium">Coach</span>
-      </button>
     </div>
   </nav>
 );
@@ -1043,10 +985,11 @@ const ErrorScreen = () => (
 
 const Dashboard = ({ courseData, getWeekStatus, getDayStatus, startSession, progress, handleWeekClick, isNextDayAvailable }) => {
     const blocks = [
-        { title: "Block 1: The Foundation (Free)", weeks: [1, 2, 3, 4, 5, 6, 7, 8], type: 'free' },
-        { title: "Block 2: Advanced Application & Resilience", weeks: [9, 10, 11, 12, 13, 14, 15, 16], type: 'paid' },
-        { title: "Block 3: Mastery & Integration", weeks: [17, 18, 19, 20, 21, 22, 23, 24], type: 'paid' },
-    ];
+  { title: "Free Trial", weeks: [1], type: 'free' },
+  { title: "Block 1: The Foundation", weeks: [2, 3, 4, 5, 6, 7, 8], type: 'paid' },
+  { title: "Block 2: Advanced Application & Resilience", weeks: [9, 10, 11, 12, 13, 14, 15, 16], type: 'paid' },
+  { title: "Block 3: Mastery & Integration", weeks: [17, 18, 19, 20, 21, 22, 23, 24], type: 'paid' },
+];
 
     const currentWeek = progress ? progress.week : 1;
     const currentDayIndex = progress ? progress.day : 0;
