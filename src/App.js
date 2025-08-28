@@ -522,17 +522,18 @@ export default function App() {
   };
 
   // Always unlock all weeks and days for unlocked users
-  const getWeekStatus = (weekNumber) => {
-    if (!userData) return 'locked';
-    if (userData.unlocked) return 'unlocked';
-    const block = getBlockForWeek(weekNumber);
-    if (block === 2 && !paymentStatus.block2) return 'payment_locked';
-    if (block === 3 && !paymentStatus.block3) return 'payment_locked';
-    const { week: currentWeek } = userData.progress;
-    if (weekNumber < currentWeek) return 'completed';
-    if (weekNumber === currentWeek) return 'unlocked';
-    return 'locked';
-  };
+ const getWeekStatus = (weekNumber) => {
+  if (!userData) return 'locked';
+  if (userData.unlocked) return 'unlocked';
+  if (weekNumber === 1) return 'unlocked'; // Free trial
+  if (weekNumber >= 2 && weekNumber <= 8 && !paymentStatus.block1) return 'payment_locked';
+  if (weekNumber >= 9 && weekNumber <= 16 && !paymentStatus.block2) return 'payment_locked';
+  if (weekNumber >= 17 && weekNumber <= 24 && !paymentStatus.block3) return 'payment_locked';
+  const { week: currentWeek } = userData.progress;
+  if (weekNumber < currentWeek) return 'completed';
+  if (weekNumber === currentWeek) return 'unlocked';
+  return 'locked';
+};
 
   const getDayStatus = (weekNumber, dayIndex) => {
     if (!userData) return 'locked';
@@ -663,6 +664,7 @@ export default function App() {
   const handlePayment = async (purchaseOption) => {
     if (!db || !user) return;
     let newPaymentStatus = { ...paymentStatus };
+    if (purchaseOption === 'block1') newPaymentStatus.block1 = true;
     if (purchaseOption === 'block2') newPaymentStatus.block2 = true;
     else if (purchaseOption === 'block3') {
       newPaymentStatus.block3 = true;
@@ -1015,7 +1017,7 @@ const Dashboard = ({ courseData, getWeekStatus, getDayStatus, startSession, prog
                 </button>
                 {showIntro && (
                     <div id="dashboard-intro-section" className="text-gray-300 space-y-4 leading-relaxed max-w-3xl mx-auto animate-fade-in">
-                        <p><strong className="text-yellow-400">Concept:</strong> Physical talent gets you to the game. Mental strength lets you win it.</p>
+                        <p><strong className="text-yellow-400">Concept:</strong> Physical talent gets you to the game. Mental strength lets you win.</p>
                         <p><strong className="text-yellow-400">Deeper Dive:</strong> You spend countless hours training your body: lifting, running, and practicing drills until they're perfect. But every top athlete knows that when the pressure is on, the real competition happens in the six inches between your ears. The difference between a good athlete and a great one often comes down to who has the stronger mental game. This course is designed to be your personal mental gym, a place to build the focus, confidence, and resilience that define elite competitors.</p>
                         <p>Over the next 24 weeks, you will learn and practice the core principles of sports psychology, adapted from the timeless wisdom of the Master Key System. We will move from foundational skills like controlling your thoughts and focus, to advanced techniques like high-definition visualization and building unshakable belief in your abilities. Each week builds on the last, creating a comprehensive mental toolkit you can use for the rest of your athletic career.</p>
                         <p>Your commitment to these daily exercises is just as important as your commitment to your physical training. The drills are short but powerful. The journaling is designed to create self-awareness, which is the cornerstone of all improvement. By investing a few minutes each day, you are not just learning concepts; you are actively re-wiring your brain for success.</p>
@@ -1324,6 +1326,7 @@ const PaymentModal = ({ onClose, onPayment, paymentStatus }) => {
     const [paid, setPaid] = useState(false);
     const priceMap = {
         gamePlan: { amount: 1499, label: 'Unlock Game Plan - $14.99' },
+        block1: { amount: 1999, label: 'Unlock Block 1 (Weeks 2-8) - $19.99' },
         block2: { amount: 4999, label: 'Unlock Block 2 - $49.99' },
         block3: { amount: 4999, label: 'Unlock Block 3 (includes Game Plan) - $49.99' },
         both: { amount: 7499, label: 'Unlock All Content (Save 25%) - $74.99' }
